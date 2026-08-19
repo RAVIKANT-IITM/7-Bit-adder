@@ -1,102 +1,101 @@
-# 🔌 7-Bit Ripple Carry Adder (Hardware Build)
+# 🔌 7-Bit Ripple Carry Adder — Built from 140+ Discrete Transistors
 
-A **7-bit Ripple Carry Adder** built entirely on breadboard using digital logic ICs — no simulator, no FPGA, pure hardware. This project adds two 7-bit binary numbers and produces a correct 7-bit sum plus a final carry-out, verified live using LED indicators and DIP switches.
+A **7-bit Ripple Carry Adder** built completely from scratch on breadboard using **140+ BC547 transistors** — no adder ICs, no simulator, no FPGA. Every AND, OR, and XOR gate needed for the Half Adders and Full Adders was built at the transistor level, then wired into a full 7-bit binary adder.
+
+<p align="center">
+  <img src="assets/breadboard_overview.png" width="380" alt="Full 7-bit ripple carry adder breadboard build"/>
+</p>
 
 ---
 
 ## 📖 Overview
 
-A Ripple Carry Adder is built by chaining multiple **Full Adder** circuits together, where the **carry-out** of each stage feeds into the **carry-in** of the next stage — like a ripple moving down a chain. This project implements a 7-bit version entirely in hardware to understand how binary addition actually happens at the gate/IC level, instead of just simulating it.
+A **Full Adder** is built from two **Half Adders** plus an OR gate:
 
-**Inputs:** Two 7-bit binary numbers (A6…A0 and B6…B0), set using DIP switches
-**Outputs:** 7-bit Sum (S6…S0) + final Carry-Out (Cout), shown on LEDs
+```
+        Sum = Cin ⊕ (A ⊕ B)
+A ──┐
+    ├─▶ [Half Adder 1] ──▶ [Half Adder 2] ──▶ Sum
+B ──┘         │                   │
+              └────────┬──────────┘
+                        ▼
+                     [OR gate] ──▶ Cout
+```
+
+Chaining **7 of these Full Adders** together — where the `Cout` of each stage feeds the `Cin` of the next — gives a **7-bit Ripple Carry Adder / Parallel Adder**:
+
+```
+ B7,A7            B2,A2            B1,A1
+   │                │                │
+   ▼                ▼                ▼
+┌──────┐   C7   ┌──────┐   C2   ┌──────┐
+│ FA_n │◀───────│ FA_2 │◀───────│ FA_1 │◀── Cin
+└──────┘        └──────┘        └──────┘
+   │                │                │
+   ▼                ▼                ▼
+  C7,S7             S2               S1
+```
+
+*(Hand-drawn circuit flow diagram below — this is the actual design sketch used before wiring it up.)*
+
+<p align="center">
+  <img src="assets/hand_drawn_flow_diagram.png" width="380" alt="Hand-drawn Half Adder / Full Adder / 7-bit adder flow diagram"/>
+</p>
+
+**Inputs:** Two 7-bit binary numbers (A7…A1 and B7…B1)
+**Outputs:** 7-bit Sum + final Carry-Out (C7)
 
 ---
 
-## 🧰 Tools & Components Used
+## 🧰 Components Used
 
-| Component | Purpose / Qty |
+| Component | Details |
 |---|---|
-| IC 7483 (4-bit Binary Full Adder) | 2x, cascaded to build 7-bit adder (1 bit unused) |
-| Breadboard | Base circuit platform |
-| DIP switches | Input bits (A and B, 7 bits each) |
-| LEDs + resistors (220Ω) | Sum output & carry-out display |
-| Jumper wires | Interconnections |
-| 5V power supply | IC power |
-| Multimeter | Debugging & voltage checks |
+| BC547 NPN Transistors | **140+**, used to build every logic gate (AND/OR/XOR/NOT) from scratch |
+| Resistors | Base & pull-up/pull-down resistors for transistor switching logic |
+| Breadboards | Multiple boards chained together for the full 7-bit circuit |
+| LEDs (Green + Red) | Output indicators — **Green = LSB side**, **Red = MSB side** |
+| Jumper wires (color-coded) | Yellow/Red/Green/White wires for organized signal routing |
+| 5V power supply | Powers the transistor logic |
 
 ---
 
-## 🧩 Block Diagram
+## 🖼️ Build Photos
 
-```
-        A0 B0        A1 B1        A2 B2        A3 B3        A4 B4        A5 B5        A6 B6
-         │  │          │  │          │  │          │  │          │  │          │  │          │  │
-         ▼  ▼          ▼  ▼          ▼  ▼          ▼  ▼          ▼  ▼          ▼  ▼          ▼  ▼
-Cin=0 ─▶[FA0]─Cout─▶[FA1]─Cout─▶[FA2]─Cout─▶[FA3]─Cout─▶[FA4]─Cout─▶[FA5]─Cout─▶[FA6]─▶ Cout(final)
-         │            │            │            │            │            │            │
-         ▼            ▼            ▼            ▼            ▼            ▼            ▼
-         S0           S1           S2           S3           S4           S5           S6
-```
+<p align="center">
+  <img src="assets/transistor_closeup.png" width="300" alt="Close-up of BC547 transistor logic gates"/>
+  <img src="assets/build_collage.png" width="300" alt="LSB and MSB LED indicators lit up"/>
+</p>
 
-Each `FA` block is one Full Adder stage inside the 7483 ICs. The **carry ripples left to right**, stage by stage — this ripple delay is exactly what makes it a "Ripple Carry" Adder (and its main real-world limitation, see below).
-
----
-
-## ✅ Truth Table — Single Full Adder Stage
-
-Each stage of the chain follows this standard Full Adder logic (`A`, `B` = input bits, `Cin` = carry in, `S` = sum, `Cout` = carry out):
-
-| A | B | Cin | Sum (S) | Cout |
-|---|---|-----|---------|------|
-| 0 | 0 |  0  |    0    |  0   |
-| 0 | 0 |  1  |    1    |  0   |
-| 0 | 1 |  0  |    1    |  0   |
-| 0 | 1 |  1  |    0    |  1   |
-| 1 | 0 |  0  |    1    |  0   |
-| 1 | 0 |  1  |    0    |  1   |
-| 1 | 1 |  0  |    0    |  1   |
-| 1 | 1 |  1  |    1    |  1   |
-
-`Cout` of every stage is wired directly into `Cin` of the next stage — chain this 7 times and you get the full 7-bit adder.
-
-**Example run:**
-```
-  A = 1011010   (90)
-+ B = 0110101   (53)
------------------
-  S = 10001111  (143)   → 7-bit sum = 0001111, final Cout = 1
-```
+The close-up shows the dense transistor-level gate logic (140+ BC547s), and the collage shows the **LSB (green)** and **MSB (red)** output indicators lighting up as different inputs are applied.
 
 ---
 
 ## ⚙️ How It Works
 
-1. Set input bits `A6…A0` and `B6…B0` using the DIP switches.
-2. `Cin` of the first (LSB) stage is tied to 0 (ground).
-3. Each 7483 IC internally computes 4 Full Adder stages in parallel logic, but the **carry-out of each bit still has to physically propagate** to the next bit before that stage's sum is valid.
-4. Sum bits `S6…S0` light up on the LEDs in real time.
-5. The final `Cout` LED lights up if the addition overflows past 7 bits.
+1. Each bit position has its own **Full Adder**, built from 2 Half Adders + 1 OR gate — all constructed using BC547 transistors instead of ready-made logic ICs.
+2. `Cin` of the first stage is grounded (0).
+3. Every stage's `Cout` physically ripples into the next stage's `Cin` — so the final bit's sum is only valid once the carry has propagated through all previous stages.
+4. Sum bits and the final carry-out are shown live on LEDs — **green LEDs = LSB side**, **red LEDs = MSB side** — so you can visually read the binary result off the breadboard.
 
 ---
 
 ## 🚧 Challenges & What I Learned
 
-- **Carry propagation delay:** Since it's a *ripple* adder, the last bit's sum isn't valid until the carry has rippled through all previous stages — I could actually see this delay on the multimeter/LEDs when testing worst-case inputs (e.g., all 1s + 1). This is what motivated me to read about faster designs like **Carry Look-Ahead Adders**.
-- **Breadboard noise & loose connections:** A few "wrong" outputs early on turned out to be bad jumper contacts, not logic errors — taught me to debug systematically stage-by-stage instead of assuming the design was wrong.
-- **Power distribution:** Making sure both 7483 ICs and all LEDs shared a clean, stable ground was essential — floating grounds gave inconsistent LED brightness and false carry readings.
-- **Using an unused bit:** Since two 4-bit adders give 8 bits total, I had to consciously ignore/ground the 8th bit's inputs to keep it a clean 7-bit adder.
+- **Building logic gates from raw transistors:** Instead of using a 7483 IC, every AND/OR/XOR gate had to be designed and biased correctly using BC547 transistors — a deep dive into how digital logic actually emerges from analog switching behavior.
+- **Scale & wiring management:** With 140+ transistors and hundreds of connections across multiple breadboards, color-coding wires (yellow/red/green/white) by signal type was essential just to keep the circuit debuggable.
+- **Carry propagation delay:** Being a *ripple* design, the carry has to physically travel through all 7 stages before the final sum is valid — worst-case inputs (like all 1s) visibly showed this delay when probing with a multimeter.
+- **Power & noise across a large breadboard circuit:** With this many transistors drawing current, keeping a clean, low-noise ground across multiple boards took real trial and error — voltage sag on distant transistors caused a few false logic states early on.
+- **Debugging at scale:** With no single IC to blame, isolating a faulty stage in a 140-transistor circuit meant tracing signals Full-Adder by Full-Adder rather than gate by gate.
 
 ---
 
 ## 🔮 Possible Improvements
 
-- Extend to a full 8-bit or 16-bit adder
-- Add a 7-segment display for decimal output instead of raw LEDs
-- Build a Carry Look-Ahead Adder version to compare speed
-- Recreate the same design in Logisim/Verilog for side-by-side comparison with the physical build
-
----
+- Add 7-segment displays for decimal readout instead of raw LEDs
+- Build a Carry Look-Ahead version at the transistor level to compare speed with this ripple design
+- Document exact transistor-level schematics for each gate (AND/OR/XOR) used
+- Extend to a full 8-bit adder
 
 ---
 
